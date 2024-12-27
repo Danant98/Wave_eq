@@ -82,11 +82,13 @@ class wave_eq:
         """
         if self.dims == '1D':
             plt.figure()
+            vmin, vmax = np.min(self.u), np.max(self.u)
             for i in range(self.u.shape[1]):
                 plt.clf()
                 plt.plot(self.x, self.u[:, i])
                 plt.xlabel(r'$x$')
                 plt.ylabel(r'$u(x, t)$')
+                plt.ylim([vmin, vmax])
                 plt.pause(1E-7)
 
 

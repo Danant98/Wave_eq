@@ -6,17 +6,18 @@ __author__ = 'Daniel Elisabethsønn Antonsen, UiT Arctic University of Norway'
 import numpy as np
 import scipy.fft as sfft
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
 
 # Initial conditions
 class wave_eq:
 
     def __init__(self, 
-                 Nx: int = 64, 
-                 Ny: int = 64,
-                 Lx: float = 15.0,
-                 Ly: float = 15.0,
-                 T: float = 1.5,
+                 Nx: int = 256, 
+                 Ny: int = 256,
+                 Lx: float = 10.0,
+                 Ly: float = 10.0,
+                 T: float = 2.0,
                  dt: float = 1e-2,
                  c: float = 1.0,
                  dims: str = '1D'
@@ -75,7 +76,7 @@ class wave_eq:
             # Initializing u(x, y, t)
             self.u = np.zeros((Nx, Ny, len(self.t)))
 
-    def u0(self, l: float, amp: float = 1.0) -> None:
+    def u0(self, l: float, amp: float = 5.0) -> None:
         """
         Initial condition; Gaussian distribution
         """
@@ -137,30 +138,32 @@ class wave_eq:
         Animate solution
         """
         if self.dims == '1D':
-            plt.figure()
-            vmin, vmax = np.min(self.u), np.max(self.u)
-            for i in range(self.u.shape[1]):
+            def animate_func(i):
                 plt.clf()
-                plt.plot(self.x, self.u[:, i])
+                plt.plot(self.x, self.u[:, i], color = 'blue')
+                plt.ylim(self.u.min(), self.u.max())
+                plt.title(f'Time: {self.t[i]:.2f} s')
                 plt.xlabel(r'$x$')
                 plt.ylabel(r'$u(x, t)$')
-                plt.ylim([vmin, vmax])
-                plt.pause(1E-7)
-        elif self.dims == '2D':
-            plt.figure()
-            vmin, vmax = np.min(self.u), np.max(self.u)
-            for i in range(len(self.t)):
-                plt.clf()
-                mappable = plt.contourf(self.x, self.y, self.u[:, :, i], levels = 20, vmin = vmin, vmax = vmax)
-                plt.colorbar(mappable, label = r'$u(x, y)$')
-                plt.xlabel(r'$x$')
-                plt.ylabel(r'$y$')
-                plt.title(f'Time: {self.t[i]:.3f}')
-                plt.pause(1e-7)            
-        plt.show()
+            fig = plt.figure()
+            anim = animation.FuncAnimation(fig, animate_func, frames = len(self.t), interval = 50)
+            anim.save('wave_eq_1D_animation.gif', dpi = 80, writer = "pillow")
 
+        elif self.dims == '2D':
+            def animate_func(i):
+                plt.clf()
+                plt.imshow(self.u[:, :, i], extent = [0, self.Lx, 0, self.Ly], 
+                           origin = 'lower', cmap = 'plasma')
+                plt.clim(self.u.min(), self.u.max())
+                plt.colorbar(label = 'u(x, y, t)')
+                plt.title(f'Time: {self.t[i]:.2f} s')
+                plt.xlabel('x')
+                plt.ylabel('y')            
+            fig = plt.figure(figsize = (6, 5))
+            anim = animation.FuncAnimation(fig, animate_func, frames = len(self.t), interval = 50)
+            anim.save('wave_eq_2D_animation.gif', dpi = 80, writer = "pillow")
 
 if __name__ == '__main__':
-    wq = wave_eq(dims = '2D')
+    wq = wave_eq(dims = '1D')
     wq.solve()
     wq.animate()
